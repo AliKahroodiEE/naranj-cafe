@@ -1,0 +1,57 @@
+// SQLite for local development. To use MySQL or PostgreSQL on an Iranian host,
+// change `provider` and `DATABASE_URL` — the rest of the code stays the same.
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id           Int      @id @default(autoincrement())
+  username     String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
+
+// Single-row table holding the café's public info.
+model Cafe {
+  id        Int      @id @default(1)
+  name      String
+  tagline   String?
+  about     String?
+  phone     String?
+  address   String?
+  hours     String?
+  instagram String?
+  updatedAt DateTime @updatedAt
+}
+
+model Category {
+  id        Int      @id @default(autoincrement())
+  name      String
+  icon      String   @default("coffee")
+  sortOrder Int      @default(0)
+  items     Item[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Item {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  price       Int // in toman
+  image       String?
+  available   Boolean  @default(true)
+  featured    Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  categoryId  Int
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([categoryId])
+}

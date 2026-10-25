@@ -1,0 +1,8 @@
+node_modules
+.next
+.env
+*.log
+.DS_Store
+# Local-only notes and tooling
+PONISHA.md
+.claude/

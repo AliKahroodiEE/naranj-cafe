@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-vazirmatn), system-ui, sans-serif;
+
+  --color-cream: #fbf6ef;
+  --color-paper: #ffffff;
+  --color-espresso: #2b1d14;
+  --color-roast: #75594a;
+  --color-line: #ecdfd0;
+  --color-naranj: #e46f24;
+  --color-naranj-dark: #c2571a;
+  --color-naranj-soft: #fdeee2;
+  --color-leaf: #2f7d5b;
+  --color-leaf-soft: #e3f2ea;
+  --color-berry: #b4323c;
+  --color-berry-soft: #fbe9ea;
+}
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  background: var(--color-cream);
+  color: var(--color-espresso);
+}
+
+/* Hide the scrollbar on the horizontal category bar but keep it scrollable. */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Section headings land below the sticky menu header (~183px) when jumped to. */
+.menu-section {
+  scroll-margin-top: 9.5rem;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: white;
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "naranj-cafe",
+  "version": "1.0.0",
+  "private": true,
+  "description": "منوی دیجیتال QR و پنل مدیریت کافه — Next.js + Node.js (Express) + Prisma",
+  "workspaces": [
+    "api",
+    "web"
+  ],
+  "scripts": {
+    "setup": "npm install && npm run db:setup -w api",
+    "dev": "concurrently -n api,web -c yellow,cyan \"npm run dev -w api\" \"npm run dev -w web\"",
+    "build": "npm run build -w web",
+    "start": "concurrently -n api,web -c yellow,cyan \"npm run start -w api\" \"npm run start -w web\""
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.6"
+  },
+  "allowScripts": {
+    "@prisma/client@6.19.3": true,
+    "@prisma/engines@6.19.3": true,
+    "prisma@6.19.3": true,
+    "unrs-resolver@1.12.2": true
+  }
+}
