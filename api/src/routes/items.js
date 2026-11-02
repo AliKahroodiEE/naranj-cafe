@@ -4,7 +4,7 @@ import { menuChanged } from '../lib/events.js';
 import { idParam, itemPatchSchema, itemSchema } from '../lib/validation.js';
 import { requireAdmin } from '../middleware/auth.js';
 import { badRequest } from '../middleware/errors.js';
-import { deleteUpload } from './uploads.js';
+import { deleteImage } from '../lib/storage.js';
 
 export const itemsRouter = Router();
 itemsRouter.use(requireAdmin);
@@ -42,7 +42,7 @@ itemsRouter.put('/:id', async (req, res) => {
   await assertCategory(data.categoryId);
   const before = await prisma.item.findUniqueOrThrow({ where: { id } });
   const item = await prisma.item.update({ where: { id }, data });
-  if (before.image && before.image !== item.image) await deleteUpload(before.image);
+  if (before.image && before.image !== item.image) await deleteImage(before.image);
   menuChanged();
   res.json(item);
 });
@@ -59,7 +59,7 @@ itemsRouter.patch('/:id', async (req, res) => {
 
 itemsRouter.delete('/:id', async (req, res) => {
   const item = await prisma.item.delete({ where: { id: idParam.parse(req.params.id) } });
-  if (item.image) await deleteUpload(item.image);
+  if (item.image) await deleteImage(item.image);
   menuChanged();
   res.json({ ok: true });
 });

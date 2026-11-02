@@ -32,9 +32,13 @@ const itemFields = {
     .int('قیمت باید عدد صحیح باشد.')
     .min(0, 'قیمت نمی‌تواند منفی باشد.')
     .max(1_000_000_000, 'قیمت وارد‌شده بیش از حد بزرگ است.'),
+  // A local upload (/uploads/…) or a photo on Vercel Blob (see lib/storage.js).
   image: z
     .string()
-    .regex(/^\/uploads\/[\w.-]+$/, 'آدرس تصویر نامعتبر است.')
+    .regex(
+      /^(\/uploads\/[\w.-]+|https:\/\/[a-z0-9]+\.public\.blob\.vercel-storage\.com\/[\w./-]+)$/,
+      'آدرس تصویر نامعتبر است.',
+    )
     .nullish()
     .transform((v) => v || null),
   available: z.boolean(),

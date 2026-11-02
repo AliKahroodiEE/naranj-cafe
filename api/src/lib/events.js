@@ -5,6 +5,11 @@
 const clients = new Set();
 
 export function subscribe(req, res) {
+  // On Vercel each request may run in a different instance, so a broadcast here
+  // would miss most open pages. 204 tells the browser not to reconnect, and the
+  // menu page falls back to checking for changes every few seconds.
+  if (process.env.VERCEL) return res.status(204).end();
+
   res.set({
     'Content-Type': 'text/event-stream',
     'Cache-Control': 'no-cache, no-transform',

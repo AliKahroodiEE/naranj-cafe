@@ -8,10 +8,12 @@
     "start": "node --env-file=.env src/index.js",
     "db:setup": "prisma db push && node --env-file=.env prisma/seed.js",
     "db:reset": "prisma db push --force-reset && node --env-file=.env prisma/seed.js",
-    "admin:password": "node --env-file=.env prisma/set-admin-password.js"
+    "admin:password": "node --env-file=.env prisma/set-admin-password.js",
+    "vercel-build": "node prisma/match-provider.js && prisma generate && prisma db push --skip-generate && node prisma/seed.js --if-empty"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
+    "@vercel/blob": "2.4.0",
     "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",
     "express": "^5.3.0",

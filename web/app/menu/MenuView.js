@@ -21,20 +21,46 @@ export default function MenuView({ initialMenu, table }) {
   const { cafe } = menu;
 
   // Live updates: the API pushes an event whenever the admin changes the menu.
+  // Where it can't hold the stream open (on Vercel it answers 204), the page asks
+  // every few seconds instead; the ETag makes an unchanged menu a tiny 304 reply.
   useEffect(() => {
     const source = new EventSource("/api/menu/stream");
-    let timer;
-    source.addEventListener("menu-updated", async () => {
-      const res = await fetch("/api/menu", { cache: "no-store" }).catch(() => null);
-      if (!res?.ok) return;
+    let timer, poll, etag;
+
+    const refresh = async ({ quiet = false } = {}) => {
+      const res = await fetch("/api/menu", {
+        cache: "no-store",
+        // Without the Cache-Control, no-store sends "no-cache" and the API never answers 304.
+        headers: etag ? { "If-None-Match": etag, "Cache-Control": "max-age=0" } : undefined,
+      }).catch(() => null);
+      if (!res?.ok) return; // also a 304: nothing changed
+      const tag = res.headers.get("ETag");
+      if (etag && tag === etag) return;
+      etag = tag;
       setMenu(await res.json());
+      if (quiet) return;
       setUpdated(true);
       clearTimeout(timer);
       timer = setTimeout(() => setUpdated(false), 2500);
+    };
+
+    const checkWhileVisible = () => {
+      if (document.visibilityState === "visible") refresh();
+    };
+
+    source.addEventListener("menu-updated", () => refresh());
+    source.addEventListener("error", () => {
+      if (source.readyState !== EventSource.CLOSED || poll) return;
+      refresh({ quiet: true });
+      poll = setInterval(checkWhileVisible, 5000);
+      document.addEventListener("visibilitychange", checkWhileVisible);
     });
+
     return () => {
       source.close();
       clearTimeout(timer);
+      clearInterval(poll);
+      document.removeEventListener("visibilitychange", checkWhileVisible);
     };
   }, []);
 

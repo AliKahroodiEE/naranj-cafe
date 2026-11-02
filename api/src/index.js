@@ -7,14 +7,13 @@ import { menuRouter } from './routes/menu.js';
 import { cafeRouter } from './routes/cafe.js';
 import { categoriesRouter } from './routes/categories.js';
 import { itemsRouter } from './routes/items.js';
-import { uploadsRouter, UPLOAD_DIR } from './routes/uploads.js';
+import { uploadsRouter } from './routes/uploads.js';
+import { UPLOAD_DIR, useBlob } from './lib/storage.js';
 import { errorHandler, notFound } from './middleware/errors.js';
 
 for (const key of ['DATABASE_URL', 'JWT_SECRET']) {
   if (!process.env[key]) throw new Error(`Missing ${key} in api/.env (see .env.example)`);
 }
-
-fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
 const app = express();
 app.set('trust proxy', 1);
@@ -22,7 +21,11 @@ app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 app.use(express.json({ limit: '100kb' }));
 app.use(cookieParser());
 
-app.use('/uploads', express.static(UPLOAD_DIR, { maxAge: '30d', immutable: true }));
+// Photos are served from api/uploads, unless they live on Vercel Blob (see lib/storage.js).
+if (!useBlob && !process.env.VERCEL) {
+  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+  app.use('/uploads', express.static(UPLOAD_DIR, { maxAge: '30d', immutable: true }));
+}
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 app.use('/api/auth', authRouter);

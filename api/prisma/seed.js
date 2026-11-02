@@ -1,20 +1,19 @@
 // Demo data for «کافه نارنج». Safe to re-run: it replaces the menu and keeps uploads.
+// With --if-empty it only fills an empty menu (used by the Vercel build, so a redeploy keeps your edits).
 // Demo photos live in prisma/demo-images (public domain, see CREDITS.md there).
 import bcrypt from 'bcryptjs';
-import fs from 'node:fs';
+import fs from 'node:fs/promises';
 import path from 'node:path';
 import { PrismaClient } from '@prisma/client';
+import { saveImage } from '../src/lib/storage.js';
 
 const prisma = new PrismaClient();
 const DEMO_IMAGES = path.resolve(import.meta.dirname, 'demo-images');
-const UPLOADS = path.resolve(import.meta.dirname, '../uploads');
 
-// Copy a demo photo into uploads/ and return its public URL.
-function demoImage(photo) {
+// Store a demo photo like an uploaded one and return its public URL.
+async function demoImage(photo) {
   if (!photo) return null;
-  const file = `demo-${photo}.webp`;
-  fs.copyFileSync(path.join(DEMO_IMAGES, `${photo}.webp`), path.join(UPLOADS, file));
-  return `/uploads/${file}`;
+  return saveImage(`demo-${photo}.webp`, await fs.readFile(path.join(DEMO_IMAGES, `${photo}.webp`)));
 }
 
 const cafe = {
@@ -100,20 +99,21 @@ async function main() {
     create: { username: ADMIN_USERNAME, passwordHash },
   });
 
+  if (process.argv.includes('--if-empty') && (await prisma.item.count()) > 0) {
+    console.log(`The menu already has items; left it unchanged. Admin user: ${ADMIN_USERNAME}`);
+    return;
+  }
+
   await prisma.cafe.upsert({ where: { id: 1 }, update: cafe, create: { id: 1, ...cafe } });
 
-  fs.mkdirSync(UPLOADS, { recursive: true });
   await prisma.item.deleteMany();
   await prisma.category.deleteMany();
   for (const [index, { items, ...category }] of menu.entries()) {
+    const withImages = await Promise.all(
+      items.map(async ({ photo, ...item }, i) => ({ ...item, image: await demoImage(photo), sortOrder: i })),
+    );
     await prisma.category.create({
-      data: {
-        ...category,
-        sortOrder: index,
-        items: {
-          create: items.map(({ photo, ...item }, i) => ({ ...item, image: demoImage(photo), sortOrder: i })),
-        },
-      },
+      data: { ...category, sortOrder: index, items: { create: withImages } },
     });
   }
 

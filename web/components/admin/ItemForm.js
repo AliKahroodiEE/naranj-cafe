@@ -8,6 +8,7 @@ import ItemImage from "@/components/ItemImage";
 import { Field, PageTitle, Switch, buttonClass, inputClass, useToast } from "@/components/admin/ui";
 import { api } from "@/lib/api";
 import { faNumber, parsePrice, toman } from "@/lib/format";
+import { shrinkPhoto } from "@/lib/photo";
 
 const EMPTY = { name: "", description: "", price: "", categoryId: "", image: null, available: true, featured: false };
 
@@ -47,10 +48,10 @@ export default function ItemForm({ id }) {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
-    const data = new FormData();
-    data.append("image", file);
     setUploading(true);
     try {
+      const data = new FormData();
+      data.append("image", await shrinkPhoto(file));
       const { url } = await api("/uploads", { method: "POST", form: data });
       set("image")(url);
     } catch (err) {
